@@ -2483,6 +2483,22 @@ function SettingsSheet({ ctx, onClose, onExit, onSignOut }) {
         </button>
       </div>
 
+      <div className="eyebrow">Tác giả & Phát triển</div>
+      <div className="card pad" style={{ background: 'linear-gradient(135deg, #161A17, #242C26)', color: '#fff', border: 'none' }}>
+        <div className="row" style={{ alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--gold)', display: 'grid', placeItems: 'center', flex: 'none', color: '#1A2614', fontWeight: 800, fontSize: 19 }}>
+            T
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>Timon (ut)</div>
+            <div className="num" style={{ fontWeight: 600, fontSize: 14.5, color: 'var(--gold)', marginTop: 2 }}>📞 0946 296 269</div>
+          </div>
+        </div>
+        <div style={{ fontSize: 12.5, color: '#A8BE85', marginTop: 8, fontStyle: 'italic' }}>
+          "người đi tìm giải pháp bán hàng cho bạn !"
+        </div>
+      </div>
+
       <div className="split" style={{ marginTop: 14 }}>
         <button className="btn ghost" onClick={onExit}><LogOut size={18} /> Đổi người bán</button>
         <button className="btn ghost" style={{ color: 'var(--pay)', borderColor: '#F1B9C5' }} onClick={onSignOut}>
@@ -2490,7 +2506,7 @@ function SettingsSheet({ ctx, onClose, onExit, onSignOut }) {
         </button>
       </div>
       <div className="tiny muted" style={{ textAlign: 'center', margin: '14px 0 4px' }}>
-        Sổ tay bán hàng · dữ liệu lưu trên Supabase của bạn
+        Sổ tay bán hàng · Phát triển bởi Timon (ut) - 0946 296 269
       </div>
     </Sheet>
   );
