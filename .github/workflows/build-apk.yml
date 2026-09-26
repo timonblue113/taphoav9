@@ -28,8 +28,6 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
-
       - name: Cài thư viện
         run: npm ci
 
