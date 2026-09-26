@@ -1,0 +1,13 @@
+SUPABASE_URL=https://mwfewtxihccqphuebvln.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_e14eLiZvHOlrD3vHkDLnNQ_ItJi6TbS
+
+
+
+npm install
+npm run build
+npx cap add android
+npx cap sync android
+
+
+
+quyền true flase chưa có trong user và cái mở cài đặt trong cho phép sd camera khi quét mã vạch chưa dc, chụp hình thì dc tiện thể kiểm tra nguồn api của gemini đã thông chưa

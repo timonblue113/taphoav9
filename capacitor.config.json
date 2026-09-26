@@ -1,0 +1,9 @@
+{
+  "appId": "vn.sotay.banhang",
+  "appName": "Sổ tay bán hàng",
+  "webDir": "dist",
+  "android": { "allowMixedContent": false },
+  "plugins": {
+    "CapacitorHttp": { "enabled": false }
+  }
+}

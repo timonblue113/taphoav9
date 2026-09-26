@@ -1,0 +1,83 @@
+name = "so-ban-hang-gemini"
+main = "index.js"
+compatibility_date = "2026-01-01"
+
+# ==================================================================
+#  TRAM MY - cho quan trong nhat trong file nay
+#
+#  Cloudflare chay Worker o trung tam du lieu gan NGUOI DUNG nhat. Nguoi
+#  dung o Viet Nam hay roi vao colo HKG (Hong Kong), ma Gemini KHONG phuc
+#  vu Hong Kong. Google tra ve:
+#
+#      "User location is not supported for the API use."
+#
+#  Loi nay khong lien quan gi toi khoa API. Doi bao nhieu khoa cung the,
+#  vi khoa nao cung goi di tu dung cai may chu bi chan do.
+#
+#  Durable Object duoi day duoc dat cung o wnam (mien tay Bac My) va no
+#  nam li o do. Worker nho no goi Gemini ho, nen luot goi di ra tu My.
+#
+#  Khac Smart Placement: cai kia la GOI Y, Cloudflare tu can nhac va can
+#  thoi gian hoc. Cai nay la EP CUNG, co hieu luc ngay lan deploy dau tien.
+# ==================================================================
+[[durable_objects.bindings]]
+name = "TRAM"
+class_name = "TramMy"
+
+# new_sqlite_classes (khong phai new_classes) de chay duoc tren goi mien phi.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TramMy"]
+
+# Smart Placement giu lai cung duoc, khong xung dot: tram My quyet dinh
+# noi luot goi di ra, con cai nay chi anh huong noi Worker chay.
+[placement]
+mode = "smart"
+
+# ------------------------------------------------------------------
+#  Bo dem luot dung + nho khoa nao dang bi Google chan.
+#
+#  Tao truoc bang:  wrangler kv namespace create NHIP_DO
+#  Roi dan id nhan duoc vao duoi va bo dau # o ba dong:
+#
+# [[kv_namespaces]]
+# binding = "NHIP_DO"
+# id = "dan_id_nhan_duoc_vao_day"
+# ------------------------------------------------------------------
+
+# Khoa bi mat KHONG khai o day (file nay len git la lo).
+#
+#   wrangler secret put GEMINI_API_KEYS
+#     -> nhieu khoa cach nhau bang dau phay, TREN MOT DONG:
+#        AIzaSy...1,AIzaSy...2
+#
+#   wrangler secret put SUPABASE_URL
+#   wrangler secret put SUPABASE_ANON_KEY
+#
+# GEMINI_API_KEY (so it) cua ban cu van dung duoc, tu gop vao cuoi danh sach.
+#
+# NHO: han muc mien phi cua Google tinh theo PROJECT chu khong theo khoa.
+# Nhieu khoa cung mot project dung chung mot han muc, xoay vong vo ich.
+
+# ------------------------------------------------------------------
+#  KHOA BI MAT CHO APP KHAC DUNG CHUNG WORKER NAY (vi du: app tap hoa)
+#
+#  App do co Supabase project RIENG, JWT cua no khong xac minh duoc voi
+#  SUPABASE_URL o tren (khac project). Thay vi bat no dung chung project
+#  vat tu, worker chap nhan them 1 duong vao bang khoa bi mat tinh:
+#
+#    X-App-Key: <khoa>      -> phai khop TAPHOA_KEY, khong thi tu choi
+#    X-App-User: <ten>      -> tuy chon, CHI dung de tach han muc rieng
+#                               cho tung quay/nguoi ban, KHONG dung de xac
+#                               thuc (ai cung tu dat duoc gia tri nay).
+#
+#  Tao khoa:
+#    wrangler secret put TAPHOA_KEY
+#      -> dan chuoi ngau nhien du dai, vi du sinh bang:
+#         node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"
+#
+#  Khoa nay dan CA vao src/config.js cua app tap hoa (GEMINI_APP_KEY).
+#  Lo khoa nay chi lam nguoi khac xai ke hoach Gemini cua ban, KHONG dung
+#  toi duoc du lieu Supabase/ho_so cua project vat tu — hai thu tach biet
+#  hoan toan o buoc nay.
+# ------------------------------------------------------------------

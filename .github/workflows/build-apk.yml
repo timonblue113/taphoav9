@@ -1,0 +1,96 @@
+name: Dựng APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  release:
+    types: [created]
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+      KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Cài thư viện
+        run: npm ci
+
+      - name: Dựng giao diện
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: npm run build
+
+      - name: Kiểm tra trước khi thêm Android (để lỗi hiện rõ nếu có)
+        run: |
+          echo "node: $(node -v)  npm: $(npm -v)"
+          echo "--- capacitor.config.json ---"; cat capacitor.config.json
+          echo "--- dist/ ---"; ls dist
+          echo "--- bản Capacitor đã cài ---"
+          node -e "for (const p of ['cli','core','android']) console.log(p, require('@capacitor/'+p+'/package.json').version)"
+
+      - name: Thêm nền Android
+        run: npx cap add android
+
+      - name: Đồng bộ Android
+        run: npx cap sync android
+
+      - name: Vá quyền + cấu hình Android
+        run: node scripts/patch-android.mjs
+
+      - name: Dựng APK gỡ lỗi (cài được ngay)
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Ký APK bản phát hành (chỉ khi đã nạp keystore)
+        if: env.KEYSTORE_B64 != ''
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > android/app/kho.jks
+          cd android
+          ./gradlew assembleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file=$PWD/app/kho.jks \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+
+      - name: Đổi tên file cho dễ nhận
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/SoTayBanHang-debug.apk
+          if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk out/SoTayBanHang.apk
+          fi
+          ls -lh out
+
+      - name: Nộp APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SoTayBanHang-APK
+          path: out/*.apk
+          retention-days: 30
+
+      - name: Gắn APK vào bản phát hành
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*.apk
