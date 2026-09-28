@@ -782,10 +782,38 @@ function SellScreen({ ctx, cart, setQty, clearCart, total, count }) {
     if (results.length) pick(results[0]);
   };
 
+  const todaySum = (shop.sums && shop.sums[shop.viewMonth] && shop.sums[shop.viewMonth][dayKey()]) || { rev: 0, cost: 0, cnt: 0 };
+  const todayRev = todaySum.rev || 0;
+  const todayCost = todaySum.cost || 0;
+  const todayCnt = todaySum.cnt || 0;
+
   return (
     <>
       <div className="body">
         <div className="pad" style={{ paddingBottom: 4 }}>
+          {/* Dashboard Doanh thu hôm nay (Phong cách iOS 27) */}
+          <div className="card pad" style={{ background: 'linear-gradient(135deg, #0F172A, #1E293B)', color: '#fff', marginBottom: 12, border: 'none', borderRadius: 18, boxShadow: '0 6px 20px rgba(15, 23, 42, 0.2)' }}>
+            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94A3B8' }}>
+                THỨ {dowOf(dayKey())}, {shortDate(dayKey())}
+              </div>
+              <span className="badge ok" style={{ fontSize: 12.5, fontWeight: 800 }}>Hôm nay</span>
+            </div>
+            <div className="num" style={{ fontSize: 34, fontWeight: 800, color: '#34D399', margin: '4px 0 10px', letterSpacing: '-0.03em' }}>
+              {money(todayRev)} <small style={{ fontSize: 18, color: '#A7F3D0', fontWeight: 700 }}>₫</small>
+            </div>
+            <div className="split" style={{ gap: 8 }}>
+              <div style={{ background: 'rgba(255,255,255,0.08)', padding: '10px 12px', borderRadius: 14 }}>
+                <div style={{ fontSize: 12.5, color: '#94A3B8', fontWeight: 700 }}>Thu vào ({todayCnt} đơn)</div>
+                <div className="num" style={{ fontSize: 17, fontWeight: 800, color: '#34D399', marginTop: 2 }}>{money(todayRev)} ₫</div>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.08)', padding: '10px 12px', borderRadius: 14 }}>
+                <div style={{ fontSize: 12.5, color: '#94A3B8', fontWeight: 700 }}>Tiền vốn (Chi ra)</div>
+                <div className="num" style={{ fontSize: 17, fontWeight: 800, color: '#F87171', marginTop: 2 }}>{money(todayCost)} ₫</div>
+              </div>
+            </div>
+          </div>
+
           <div className="row">
             <div className="searchwrap">
               <Search size={19} className="sicon" />
