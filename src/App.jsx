@@ -612,35 +612,30 @@ function Shell({ session, onExit, say, onSignOut, onLockTrial }) {
 
   return (
     <>
-      <div className="top">
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--gold)', display: 'grid', placeItems: 'center', flex: 'none' }}>
-          <Store size={18} color="#221A00" />
+      <div className="top" style={{ padding: '8px 12px' }}>
+        <div style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--gold)', display: 'grid', placeItems: 'center', flex: 'none' }}>
+          <Store size={17} color="#221A00" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="nm" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{shopMeta.name}</div>
-          <div className="sub row" style={{ gap: 6 }}>
+          <div className="nm" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 16 }}>{shopMeta.name}</div>
+          <div className="sub row" style={{ gap: 5, fontSize: 11.5, flexWrap: 'wrap', marginTop: 1 }}>
             <span className={'dot' + (shop.sync.ok ? ' on' : '')} />
-            <span>{ME}</span>
+            <span style={{ fontWeight: 700, color: '#F8FAFC' }}>{ME}</span>
+            {trialDaysLeft !== null && (
+              <span style={{ color: '#FBBF24', fontWeight: 700, background: 'rgba(245, 158, 11, 0.2)', padding: '0px 5px', borderRadius: 4, fontSize: 11 }}>
+                {trialDaysLeft === 0 ? '• Dùng thử: Ngày cuối' : `• Dùng thử: Còn ${trialDaysLeft} ngày`}
+              </span>
+            )}
             {shop.live.filter((l) => slug(l.name) !== slug(ME)).map((l, i) => <span key={l.name + i}>· {l.name} đang bán</span>)}
             {shop.queue > 0 ? <span style={{ color: 'var(--gold)' }}>· {shop.queue} chờ gửi</span> : null}
           </div>
         </div>
-        <button className="iconbtn" onClick={() => shop.pull()} title="Đồng bộ ngay">
-          {shop.sync.busy ? <RefreshCw size={18} className="spin" /> : shop.sync.ok ? <Cloud size={18} /> : <CloudOff size={18} color="#F2B21B" />}
+        <button className="iconbtn" style={{ width: 34, height: 34 }} onClick={() => shop.pull()} title="Đồng bộ ngay">
+          {shop.sync.busy ? <RefreshCw size={16} className="spin" /> : shop.sync.ok ? <Cloud size={16} /> : <CloudOff size={16} color="#F2B21B" />}
         </button>
-        <button className="iconbtn" onClick={() => setShowSettings(true)}><Settings size={18} /></button>
+        <button className="iconbtn" style={{ width: 34, height: 34 }} onClick={() => setShowSettings(true)}><Settings size={16} /></button>
       </div>
 
-      {trialDaysLeft !== null && (
-        <div className="banner warn" style={{ margin: '8px 12px 0', borderRadius: 10 }}>
-          <AlertTriangle size={15} />
-          <div className="tiny">
-            {trialDaysLeft === 0
-              ? 'Hôm nay là ngày cuối dùng thử — liên hệ người bán để kích hoạt.'
-              : `Còn ${trialDaysLeft} ngày dùng thử — liên hệ người bán để kích hoạt tiếp.`}
-          </div>
-        </div>
-      )}
       {tab === 'sell' && <SellScreen ctx={ctx} cart={cart} setQty={setQty} clearCart={clearCart} total={cartTotal} count={cartCount} />}
       {tab === 'bulk' && <BulkScreen ctx={ctx} />}
       {tab === 'goods' && <GoodsScreen ctx={ctx} />}
@@ -821,25 +816,16 @@ function SellScreen({ ctx, cart, setQty, clearCart, total, count }) {
     <>
       <div className="body">
         <div className="pad" style={{ paddingBottom: 4 }}>
-          {/* Dashboard Doanh thu hôm nay (Phong cách iOS 27) */}
-          <div className="card pad" style={{ background: 'linear-gradient(135deg, #0F172A, #1E293B)', color: '#fff', marginBottom: 12, border: 'none', borderRadius: 18, boxShadow: '0 6px 20px rgba(15, 23, 42, 0.2)' }}>
-            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#94A3B8' }}>
-                THỨ {dowOf(dayKey())}, {shortDate(dayKey())}
+          {/* Doanh thu hôm nay (Gọn đẹp - Tiết kiệm không gian) */}
+          <div className="card pad" style={{ background: 'linear-gradient(135deg, #0F172A, #1E293B)', color: '#fff', marginBottom: 8, padding: '7px 12px', borderRadius: 12, border: 'none' }}>
+            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
+              <div className="row" style={{ gap: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase' }}>T{dowOf(dayKey())} {shortDate(dayKey())}</span>
+                <span className="num" style={{ fontSize: 18, fontWeight: 800, color: '#34D399' }}>{money(todayRev)} ₫</span>
               </div>
-              <span className="badge ok" style={{ fontSize: 12.5, fontWeight: 800 }}>Hôm nay</span>
-            </div>
-            <div className="num" style={{ fontSize: 34, fontWeight: 800, color: '#34D399', margin: '4px 0 10px', letterSpacing: '-0.03em' }}>
-              {money(todayRev)} <small style={{ fontSize: 18, color: '#A7F3D0', fontWeight: 700 }}>₫</small>
-            </div>
-            <div className="split" style={{ gap: 8 }}>
-              <div style={{ background: 'rgba(255,255,255,0.08)', padding: '10px 12px', borderRadius: 14 }}>
-                <div style={{ fontSize: 12.5, color: '#94A3B8', fontWeight: 700 }}>Thu vào ({todayCnt} đơn)</div>
-                <div className="num" style={{ fontSize: 17, fontWeight: 800, color: '#34D399', marginTop: 2 }}>{money(todayRev)} ₫</div>
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.08)', padding: '10px 12px', borderRadius: 14 }}>
-                <div style={{ fontSize: 12.5, color: '#94A3B8', fontWeight: 700 }}>Tiền vốn (Chi ra)</div>
-                <div className="num" style={{ fontSize: 17, fontWeight: 800, color: '#F87171', marginTop: 2 }}>{money(todayCost)} ₫</div>
+              <div className="row" style={{ gap: 8, fontSize: 12, fontWeight: 600 }}>
+                <span style={{ color: '#A7F3D0' }}>Thu: <b className="num">{money(todayRev)}</b> ({todayCnt} đơn)</span>
+                <span style={{ color: '#FCA5A5' }}>Vốn: <b className="num">{money(todayCost)}</b></span>
               </div>
             </div>
           </div>
