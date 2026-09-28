@@ -34,21 +34,21 @@ let _licenseCache = null;
 let _licenseCacheAt = 0;
 
 async function checkTrial(userId) {
-  // Cache 60 giây để tránh gọi mạng quá nhiều
-  if (_licenseCache && Date.now() - _licenseCacheAt < 60000) return _licenseCache;
+  // Cache 30 giây để tránh gọi mạng quá dồn dập
+  if (_licenseCache && Date.now() - _licenseCacheAt < 30000) return _licenseCache;
   try {
     const { data, error } = await sb().rpc('my_license');
     if (error) throw error;
     const d = data || {};
     const daysUsed = Number(d.days_used) || 0;
     const activated = !!d.activated;
-    const daysLeft = Math.max(0, TRIAL_DAYS - Math.floor(daysUsed));
-    const expired = !activated && daysUsed >= TRIAL_DAYS;
-    _licenseCache = { expired, daysLeft, activated, userId };
+    const daysLeft = Math.max(0, Math.ceil(TRIAL_DAYS - daysUsed));
+    const expired = !activated && (daysUsed >= TRIAL_DAYS || daysLeft <= 0);
+    _licenseCache = { expired, daysLeft: expired ? 0 : daysLeft, activated, userId };
     _licenseCacheAt = Date.now();
     return _licenseCache;
   } catch {
-    // Mất mạng: nếu đã có cache cũ thì dùng, không thì cho qua (tránh khóa oan)
+    // Mất mạng: nếu đã có cache cũ thì dùng, không thì tạm thời cho qua (tránh khóa nhầm khi mất mạng)
     return _licenseCache || { expired: false, daysLeft: TRIAL_DAYS, activated: false, userId };
   }
 }
@@ -70,7 +70,7 @@ function TrialLockScreen({ info, onActivated, onSignOut, say }) {
       say('Đã kích hoạt — mời vào!');
       onActivated();
     } else {
-      say('Chưa thấy kích hoạt — liên hệ người bán.');
+      say('Chưa thấy kích hoạt — liên hệ nhà phát triển.');
     }
     setBusy(false);
   };
@@ -79,21 +79,40 @@ function TrialLockScreen({ info, onActivated, onSignOut, say }) {
     <div className="body" style={{ background: 'var(--chassis)' }}>
       <Brand sub="Hết thời gian dùng thử" />
       <div className="paperbox">
-        <div className="banner warn" style={{ marginBottom: 16 }}>
-          <AlertTriangle size={17} />
+        <div className="banner err" style={{ marginBottom: 16 }}>
+          <AlertTriangle size={18} />
           <div>
             Thời gian dùng thử <b>{TRIAL_DAYS} ngày</b> đã kết thúc.
-            Liên hệ người bán để được kích hoạt tiếp tục sử dụng.
+            Vui lòng liên hệ nhà phát triển để được kích hoạt sử dụng chính thức.
           </div>
         </div>
-        <div className="banner info" style={{ marginBottom: 14 }}>
+
+        {/* Thẻ liên hệ nhà phát triển */}
+        <div className="card pad" style={{ background: 'linear-gradient(135deg, #161A17, #242C26)', color: '#fff', border: 'none', marginBottom: 16 }}>
+          <div className="row" style={{ alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 44, height: 42, borderRadius: 12, background: 'var(--gold)', display: 'grid', placeItems: 'center', flex: 'none', color: '#1A2614', fontWeight: 800, fontSize: 19 }}>
+              T
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>Hỗ trợ kích hoạt: Timon (ut)</div>
+              <div className="num" style={{ fontWeight: 700, fontSize: 16, color: 'var(--gold)', marginTop: 2 }}>📞 0946 296 269</div>
+            </div>
+          </div>
+          <div className="tiny" style={{ marginTop: 10, color: '#94A3B8', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 8 }}>
+            Mã tài khoản (User ID) của bạn: <br />
+            <b className="num" style={{ color: '#fff', fontSize: 13, wordBreak: 'break-all' }}>{info.userId || ''}</b>
+          </div>
+        </div>
+
+        <div className="banner info" style={{ marginBottom: 16 }}>
           <Users size={17} />
           <div>
-            Sau khi người bán <b>đã kích hoạt tài khoản của bạn</b>, bấm nút bên dưới để vào app.
+            Sau khi liên hệ kích hoạt xong, bấm nút bên dưới để kiểm tra và tiếp tục bán hàng.
           </div>
         </div>
+
         <button className="btn pay" style={{ width: '100%' }} disabled={busy} onClick={retry}>
-          {busy ? <Loader2 className="spin" size={18} /> : <RefreshCw size={18} />} Kiểm tra kích hoạt
+          {busy ? <Loader2 className="spin" size={18} /> : <RefreshCw size={18} />} Kiểm tra kích hoạt ngay
         </button>
         <button className="btn ghost sm2" style={{ width: '100%', marginTop: 12, color: 'var(--pay)', borderColor: '#F1B9C5' }} onClick={onSignOut}>
           <LogOut size={16} /> Thoát tài khoản
@@ -150,7 +169,7 @@ export default function App() {
       }} onBack={() => setPhase('setup')} say={say} />}
       {phase === 'shop' && <ShopPicker user={user} onIn={(s) => { setSession(s); setPhase('run'); }} onSignOut={signOut} say={say} />}
       {phase === 'trial' && trialInfo && <TrialLockScreen info={trialInfo} onActivated={() => { setTrialInfo(null); setPhase('shop'); }} onSignOut={signOut} say={say} />}
-      {phase === 'run' && session && <Shell session={session} say={say} onExit={() => { setSession(null); setPhase('shop'); }} onSignOut={signOut} />}
+      {phase === 'run' && session && <Shell session={session} say={say} onExit={() => { setSession(null); setPhase('shop'); }} onSignOut={signOut} onLockTrial={(info) => { setTrialInfo(info); setPhase('trial'); }} />}
       {toast ? <div className="toast">{toast}</div> : null}
     </div>
   );
@@ -462,7 +481,7 @@ const NumPad = ({ value, onChange, onOk, okLabel = 'Xong', quick = [], hideOk = 
 
 /* ───────────── khung chính ───────────── */
 
-function Shell({ session, onExit, say, onSignOut }) {
+function Shell({ session, onExit, say, onSignOut, onLockTrial }) {
   const shop = useShop(session);
   const { ME, meta, products } = shop;
 
@@ -480,12 +499,23 @@ function Shell({ session, onExit, say, onSignOut }) {
 
   const shopMeta = meta || session.shop;
 
-  // Hiện cảnh báo nếu còn ít ngày dùng thử
+  // Kiểm tra thời hạn dùng thử liên tục — nếu hết 3 ngày thì khoá ngay lập tức!
   useEffect(() => {
-    checkTrial(session.user.id).then((info) => {
-      if (!info.expired && info.daysLeft <= TRIAL_DAYS) setTrialDaysLeft(info.daysLeft);
-    }).catch(() => {});
-  }, [session.user.id]);
+    if (!session || !session.user) return;
+    const verify = async () => {
+      try {
+        const info = await checkTrial(session.user.id);
+        if (info.expired) {
+          if (onLockTrial) onLockTrial(info);
+        } else {
+          setTrialDaysLeft(info.daysLeft);
+        }
+      } catch { /* bỏ qua */ }
+    };
+    verify();
+    const timer = setInterval(verify, 30000); // Tự động kiểm tra lại mỗi 30 giây
+    return () => clearInterval(timer);
+  }, [session, onLockTrial]);
 
   /* Danh mục 153k mã đóng gói sẵn trong app — mở là dùng, không cần mạng */
   /** Đọc bytes rồi mới quyết định có cần giải nén hay không — một số WebView Android
