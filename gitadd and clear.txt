@@ -1,0 +1,22 @@
+# 1. Xóa sạch bộ nhớ Git cũ trong thư mục (bỏ qua nếu báo lỗi không tìm thấy)
+Remove-Item -Recurse -Force .git
+
+# 2. Khởi tạo lại Git từ đầu
+git init
+
+# 3. Đưa toàn bộ file vào hàng chờ
+git add .
+
+# 4. Lưu lại (Commit)
+git commit -m "Khoi tao du an moi"
+
+# 5. Đổi tên nhánh thành main
+git branch -M main
+
+# 6. Khai báo link GitHub mới (Thay 'ten_project_moi' bằng tên kho chứa mới của bạn)
+git remote add origin https://github.com/timonblue113/ten_project_moi.git
+
+# 7. Đẩy code lên GitHub
+git push -u origin main
+https://postbvtv-ai-proxy.bvtv-proxy.workers.dev
+curl -X POST https://so-ban-hang-gemini.buivanut991.workers.dev \-H "Content-Type: application/json" \-H "X-App-Key: 7Ulclz6V7-3iJX4x3iJPZdloufpDTpmo" \-d '{"base64":"dGVzdA==","mimeType":"image/jpeg","che_do":"vat_tu"}'
