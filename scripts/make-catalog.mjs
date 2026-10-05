@@ -1,7 +1,7 @@
-/* Chuyển bảng giá mới (.xlsx đã lưu thành .tsv/.csv) thành public/catalog.tsv.gz
-   Dùng khi bạn có danh mục cập nhật.  node scripts/make-catalog.mjs input.tsv */
+/* Chuyển bảng giá mới (.xlsx đã lưu thành .tsv/.csv) thành public/catalog.bin
+   Dùng khi bạn có danh mục cập nhật: node scripts/make-catalog.mjs input.tsv */
 import fs from 'node:fs';
-import { gzipSync, strToU8 } from 'fflate';
+import { gzipSync } from 'node:zlib';
 
 const inp = process.argv[2];
 if (!inp) { console.error('Cách dùng: node scripts/make-catalog.mjs <tệp.tsv|.csv>\nCột: mã vạch, mã nội bộ, tên hàng, giá'); process.exit(1); }
@@ -25,5 +25,5 @@ for (const line of raw.split(/\r?\n/)) {
 }
 rows.sort();                       // BẮT BUỘC sắp theo mã vạch — app tra bằng tìm nhị phân
 const text = rows.join('\n');
-fs.writeFileSync('public/catalog.tsv.gz', gzipSync(strToU8(text), { level: 9 }));
-console.log(`✔ ${rows.length.toLocaleString('vi-VN')} mã → public/catalog.tsv.gz (${(fs.statSync('public/catalog.tsv.gz').size / 1048576).toFixed(2)} MB)`);
+fs.writeFileSync('public/catalog.bin', gzipSync(text, { level: 9 }));
+console.log(`✔ ${rows.length.toLocaleString('vi-VN')} mã → public/catalog.bin (${(fs.statSync('public/catalog.bin').size / 1048576).toFixed(2)} MB)`);
