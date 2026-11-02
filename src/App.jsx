@@ -35,8 +35,7 @@ let _licenseCache = null;
 let _licenseCacheAt = 0;
 
 async function checkTrial(userId) {
-  // Cache 30 giây để tránh gọi mạng quá dồn dập
-  if (_licenseCache && Date.now() - _licenseCacheAt < 30000) return _licenseCache;
+  // Luôn kiểm tra trực tiếp từ Supabase real-time để phản hồi chính xác trạng thái kích hoạt/hết hạn
   try {
     const { data, error } = await sb().rpc('my_license');
     if (error) throw error;
@@ -45,19 +44,15 @@ async function checkTrial(userId) {
     const activated = !!d.activated;
     const daysLeft = Math.max(0, Math.ceil(TRIAL_DAYS - daysUsed));
     const expired = !activated && (daysUsed >= TRIAL_DAYS || daysLeft <= 0);
-    _licenseCache = { expired, daysLeft: expired ? 0 : daysLeft, activated, userId };
-    _licenseCacheAt = Date.now();
-    return _licenseCache;
+    return { expired, daysLeft: expired ? 0 : daysLeft, activated, userId };
   } catch {
-    // Mất mạng: nếu đã có cache cũ thì dùng, không thì tạm thời cho qua (tránh khóa nhầm khi mất mạng)
-    return _licenseCache || { expired: false, daysLeft: TRIAL_DAYS, activated: false, userId };
+    return { expired: false, daysLeft: TRIAL_DAYS, activated: false, userId };
   }
 }
 
 /** Admin dùng Supabase Dashboard hoặc script để set activated=true.
  *  App chỉ cần gọi checkTrial() lại để lấy trạng thái mới. */
 async function reloadLicense(userId) {
-  _licenseCache = null; // xoá cache, lần sau sẽ hỏi lại Supabase
   return checkTrial(userId);
 }
 
