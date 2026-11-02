@@ -80,42 +80,54 @@ function TrialLockScreen({ info, onActivated, onSignOut, say }) {
     <div className="body" style={{ background: 'var(--chassis)' }}>
       <Brand sub="Hết thời gian dùng thử" />
       <div className="paperbox">
-        <div className="banner err" style={{ marginBottom: 16 }}>
+        <div className="banner err" style={{ marginBottom: 14 }}>
           <AlertTriangle size={18} />
           <div>
             Thời gian dùng thử <b>{TRIAL_DAYS} ngày</b> đã kết thúc.
-            Vui lòng liên hệ nhà phát triển để được kích hoạt sử dụng chính thức.
+            Vui lòng đăng ký gói Thương mại B2B để tiếp tục sử dụng.
           </div>
+        </div>
+
+        {/* Gói cước Thương mại B2B qua Google Play */}
+        <div className="card pad" style={{ background: '#fff', border: '2px solid #16A34A', marginBottom: 14 }}>
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 16, color: '#0F172A' }}>Gói Thương mại B2B</div>
+              <div style={{ fontSize: 14, color: '#16A34A', fontWeight: 800, marginTop: 2 }}>100.000 ₫ / tháng</div>
+            </div>
+            <span className="badge ok">Google Play</span>
+          </div>
+          <div className="tiny muted" style={{ margin: '8px 0 12px' }}>
+            Thanh toán tự động qua Google Play Store hoặc liên hệ trực tiếp để kích hoạt ngay 30 ngày sử dụng.
+          </div>
+          <button className="btn gold" style={{ width: '100%', height: 48 }} onClick={() => {
+            try { window.open('https://play.google.com/store/apps/details?id=com.sotaybanhang.app', '_blank'); }
+            catch { say('Liên hệ 0946296269 để gia hạn'); }
+          }}>
+            <CircleDollarSign size={18} /> Đăng ký thuê bao Google Play
+          </button>
         </div>
 
         {/* Thẻ liên hệ nhà phát triển */}
-        <div className="card pad" style={{ background: 'linear-gradient(135deg, #161A17, #242C26)', color: '#fff', border: 'none', marginBottom: 16 }}>
+        <div className="card pad" style={{ background: 'linear-gradient(135deg, #161A17, #242C26)', color: '#fff', border: 'none', marginBottom: 14 }}>
           <div className="row" style={{ alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 44, height: 42, borderRadius: 12, background: 'var(--gold)', display: 'grid', placeItems: 'center', flex: 'none', color: '#1A2614', fontWeight: 800, fontSize: 19 }}>
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--gold)', display: 'grid', placeItems: 'center', flex: 'none', color: '#1A2614', fontWeight: 800, fontSize: 19 }}>
               T
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 16, color: '#fff' }}>Hỗ trợ kích hoạt: Timon (ut)</div>
-              <div className="num" style={{ fontWeight: 700, fontSize: 16, color: 'var(--gold)', marginTop: 2 }}>📞 0946 296 269</div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: '#fff' }}>Hỗ trợ B2B: Timon (ut)</div>
+              <div className="num" style={{ fontWeight: 700, fontSize: 15, color: 'var(--gold)', marginTop: 2 }}>📞 0946 296 269</div>
             </div>
           </div>
-          <div className="tiny" style={{ marginTop: 10, color: '#94A3B8', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 8 }}>
-            Mã tài khoản (User ID) của bạn: <br />
-            <b className="num" style={{ color: '#fff', fontSize: 13, wordBreak: 'break-all' }}>{info.userId || ''}</b>
-          </div>
-        </div>
-
-        <div className="banner info" style={{ marginBottom: 16 }}>
-          <Users size={17} />
-          <div>
-            Sau khi liên hệ kích hoạt xong, bấm nút bên dưới để kiểm tra và tiếp tục bán hàng.
+          <div className="tiny" style={{ marginTop: 8, color: '#94A3B8', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 6 }}>
+            Mã tài khoản (User ID): <b className="num" style={{ color: '#fff', fontSize: 12 }}>{info.userId || ''}</b>
           </div>
         </div>
 
         <button className="btn pay" style={{ width: '100%' }} disabled={busy} onClick={retry}>
           {busy ? <Loader2 className="spin" size={18} /> : <RefreshCw size={18} />} Kiểm tra kích hoạt ngay
         </button>
-        <button className="btn ghost sm2" style={{ width: '100%', marginTop: 12, color: 'var(--pay)', borderColor: '#F1B9C5' }} onClick={onSignOut}>
+        <button className="btn ghost sm2" style={{ width: '100%', marginTop: 10, color: 'var(--pay)', borderColor: '#F1B9C5' }} onClick={onSignOut}>
           <LogOut size={16} /> Thoát tài khoản
         </button>
       </div>
@@ -238,12 +250,49 @@ const Brand = ({ sub }) => (
 
 /* ───────────── 2. Đăng nhập tài khoản ───────────── */
 
+function ForgotPasswordModal({ onClose, say }) {
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const sendReset = async () => {
+    if (!email.trim() || !email.includes('@')) { setMsg('Vui lòng nhập đúng email'); return; }
+    setBusy(true); setMsg('');
+    try {
+      const { error } = await sb().auth.resetPasswordForEmail(email.trim().toLowerCase());
+      if (error) throw error;
+      setMsg('Đã gửi email khôi phục mật khẩu! Kiểm tra hộp thư của bạn.');
+      say('Đã gửi email khôi phục');
+    } catch (e) {
+      setMsg(e.message || 'Không gửi được email khôi phục');
+    }
+    setBusy(false);
+  };
+
+  return (
+    <Sheet open onClose={onClose} title="Quên mật khẩu" icon={<KeyRound size={20} />}
+      footer={
+        <button className="btn pay" style={{ width: '100%' }} disabled={busy || !email.trim()} onClick={sendReset}>
+          {busy ? <Loader2 className="spin" size={18} /> : <Check size={18} />} Gửi yêu cầu đặt lại mật khẩu
+        </button>
+      }>
+      <div className="lab">Nhập email tài khoản của bạn</div>
+      <input className="field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="banhang@gmail.com" inputMode="email" />
+      {msg && <div className="banner info" style={{ marginTop: 10 }}>{msg}</div>}
+      <div className="tiny muted" style={{ marginTop: 10 }}>
+        Hệ thống sẽ gửi liên kết đặt lại mật khẩu mới tới email của bạn.
+      </div>
+    </Sheet>
+  );
+}
+
 function AuthScreen({ onIn, onBack, say }) {
   const [mode, setMode] = useState('in');
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   useEffect(() => { (async () => {
     const { value } = await Preferences.get({ key: 'last.email' });
@@ -292,12 +341,18 @@ function AuthScreen({ onIn, onBack, say }) {
         <button className="btn pay" style={{ width: '100%', marginTop: 14 }} disabled={busy} onClick={go}>
           {busy ? <Loader2 className="spin" size={18} /> : <LogIn size={18} />} {mode === 'in' ? 'Đăng nhập' : 'Tạo tài khoản'}
         </button>
+        {mode === 'in' && (
+          <button className="btn ghost sm2" style={{ width: '100%', marginTop: 8, color: 'var(--muted)', border: 'none' }} onClick={() => setForgotOpen(true)}>
+            Quên mật khẩu?
+          </button>
+        )}
         <div className="banner info" style={{ marginTop: 14 }}>
           <Users size={17} />
           <div>Hai người bán cùng lúc thì <b>cùng đăng nhập một tài khoản này</b> trên hai máy, rồi mỗi người chọn tên riêng ở bước sau.</div>
         </div>
         <button className="btn ghost sm2" style={{ width: '100%', marginTop: 12 }} onClick={onBack}>Đổi kho dữ liệu Supabase</button>
       </div>
+      {forgotOpen && <ForgotPasswordModal onClose={() => setForgotOpen(false)} say={say} />}
     </div>
   );
 }
