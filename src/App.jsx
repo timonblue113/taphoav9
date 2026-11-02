@@ -96,7 +96,7 @@ function TrialLockScreen({ info, onActivated, onSignOut, say }) {
             Thanh toán tự động qua Google Play Store hoặc liên hệ trực tiếp để kích hoạt ngay 30 ngày sử dụng.
           </div>
           <button className="btn gold" style={{ width: '100%', height: 48 }} onClick={() => {
-            try { window.open('https://play.google.com/store/apps/details?id=com.sotaybanhang.app', '_blank'); }
+            try { window.open('https://play.google.com/store/apps/details?id=vn.sotaybanhang.app', '_blank'); }
             catch { say('Liên hệ 0946296269 để gia hạn'); }
           }}>
             <CircleDollarSign size={18} /> Đăng ký thuê bao Google Play
